@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+    <head>
+        <meta charset="utf-8">
+        <title>1111</title>
+    </head>
+    <body>
+
+    </body>
+
+    <script type="text/javascript">
+        window.onload = function() {
+            const url = 'ws://127.0.0.1:9901';
+            const websocket = new WebSocket(url);
+            websocket.onopen = function (evt) {
+                websocket.send('hello');
+            };
+
+            websocket.onclose = function (evt) {
+                console.log("Disconnected");
+            };
+
+            websocket.onmessage = function (evt) {
+                console.log('Retrieved data from server: ' + evt.data);
+            };
+
+            websocket.onerror = function (evt, e) {
+                console.log('Error occured: ' + evt.data);
+            };
+        }
+    </script>
+</html>
