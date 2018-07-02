@@ -2,8 +2,6 @@
 
 namespace src;
 
-use src\Redis;
-
 class CustomSessionHandle implements \SessionHandlerInterface
 {
     private $option = [];
@@ -20,29 +18,43 @@ class CustomSessionHandle implements \SessionHandlerInterface
         $this->option = $option;
     }
 
+    /**
+     * @param string $save_path
+     * @param string $session_name
+     * @return bool
+     * @throws \Exception
+     */
     public function open($save_path, $session_name) : bool
     {
-        $this->handler = Redis::connect();
+        $this->handler = CustomRedis::connect();
 
         return true;
     }
 
+    /**
+     * @param string $session_id
+     * @return string
+     */
     public function read($session_id) : string
     {
-        $sessionId = $this->handler->get('easy_chat:session_id');
+        $sessionId = $this->handler->get($this->option['session_id_key']);
         if (empty($sessionId)) {
             $sessionId = $this->option['prefix'] . $session_id;
         }
 
         $result = $this->handler->get($sessionId);
 
-        $this->handler->set('ttt',$sessionId . PHP_EOL);
         return empty($result) ? '' : $result;
     }
 
+    /**
+     * @param string $session_id
+     * @param string $session_data
+     * @return bool
+     */
     public function write($session_id, $session_data) : bool
     {
-        $sessionId = $this->handler->get('easy_chat:session_id');
+        $sessionId = $this->handler->get($this->option['session_id_key']);
         if (empty($sessionId)) {
             $sessionId = $this->option['prefix'] . $session_id;
         }
@@ -52,20 +64,37 @@ class CustomSessionHandle implements \SessionHandlerInterface
         return empty($result) ? false : true;
     }
 
+    /**
+     * @param string $session_id
+     * @return bool
+     */
     public function destroy($session_id) : bool
     {
-        // $sessionId = $this->option['prefix'] . $session_id;
-        // $result = $this->handler->del($sessionId);
 
-        return  false;
+        $sessionId = $this->handler->get($this->option['session_id_key']);
+        if (empty($sessionId)) {
+
+            return true;
+        }
+
+        $result = $this->handler->del($sessionId);
+
+        return empty($result) ? false : true;
     }
 
+    /**
+     * @return bool
+     */
     public function close() : bool
     {
         // code...
         return true;
     }
 
+    /**
+     * @param int $maxlifetime
+     * @return bool
+     */
     public function gc($maxlifetime) : bool
     {
         // code...

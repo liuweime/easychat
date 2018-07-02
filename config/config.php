@@ -6,11 +6,11 @@ return [
      * socket 配置
      */
     'socket' => [
-
-        'host' => '0.0.0.0',           // swoole监视ip
-        'port' => 9901,                       // swoole监视端口
-        'daemonize' => 0,                     // 是否作为守护进程
-        'worker_num' => 4,                    // worker进程数
+        'host' => '0.0.0.0',          // swoole监视ip
+        'port' => 9901,               // swoole监视端口
+        'daemonize' => 0,             // 是否作为守护进程
+        'worker_num' => 4,            // worker进程数
+        'prefix' => 'easychat:'
     ],
 
     /**
@@ -38,5 +38,6 @@ return [
       'session' => [
           'max_lifetime' => 24 * 60 * 60,
           'prefix' => 'liu:',
+          'session_id_key' => 'easy_chat:session_id'
       ],
 ];

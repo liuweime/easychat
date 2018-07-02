@@ -4,9 +4,13 @@ namespace src;
 
 use Predis\Client;
 
-class Redis
+class CustomRedis
 {
 
+    /**
+     * @return Client
+     * @throws \Exception
+     */
     public static function connect()
     {
         $redisConfig = config('redis');

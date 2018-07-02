@@ -1,8 +1,7 @@
 <?php
 
 
-require_once './Server.php';
-$config = require_once '../config/config.php';
+use console\WebSocketServer;
 
-$server = new WebSocketServer($config['socket']);
+$server = new WebSocketServer(config('socket'));
 $server->run();
