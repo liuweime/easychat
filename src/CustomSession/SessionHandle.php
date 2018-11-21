@@ -1,15 +1,26 @@
 <?php
+/**
+ * Created by PhpStorm.
+ * User: liuwei
+ * Date: 2018/11/8
+ * Time: 16:16
+ */
+namespace CustomSession;
 
-namespace src;
+use Container\Container;
+use CustomRedis\CustomRedis;
 
-class CustomSessionHandle implements \SessionHandlerInterface
+class SessionHandle  implements \SessionHandlerInterface
 {
     private $option = [];
 
+    /** @var CustomRedis */
     private $handler;
 
-    public function __construct(array $option)
+    public function __construct()
     {
+        Container::getInstance()->bind('config', 'Config');
+        $option = Container::getInstance()->get('config')->get('session');
         // 检测是否设置了session失效时间
         if (empty($option['max_lifetime'])) {
             $option['max_lifetime'] = ini_get('session.gc_maxlifetime');
@@ -26,7 +37,8 @@ class CustomSessionHandle implements \SessionHandlerInterface
      */
     public function open($save_path, $session_name) : bool
     {
-        $this->handler = CustomRedis::connect();
+        Container::getInstance()->bind('CustomRedis\CustomRedis', 'CustomRedis\CustomRedis');
+        $this->handler = Container::getInstance()->get('CustomRedis\CustomRedis');
 
         return true;
     }
@@ -41,10 +53,9 @@ class CustomSessionHandle implements \SessionHandlerInterface
         if (empty($sessionId)) {
             $sessionId = $this->option['prefix'] . $session_id;
         }
-
         $result = $this->handler->get($sessionId);
 
-        return empty($result) ? '' : $result;
+        return empty($result) ? '' : (string)$result;
     }
 
     /**
@@ -58,7 +69,6 @@ class CustomSessionHandle implements \SessionHandlerInterface
         if (empty($sessionId)) {
             $sessionId = $this->option['prefix'] . $session_id;
         }
-
         $result = $this->handler->setex($sessionId, $this->option['max_lifetime'], $session_data);
 
         return empty($result) ? false : true;
@@ -70,13 +80,11 @@ class CustomSessionHandle implements \SessionHandlerInterface
      */
     public function destroy($session_id) : bool
     {
-
         $sessionId = $this->handler->get($this->option['session_id_key']);
         if (empty($sessionId)) {
 
             return true;
         }
-
         $result = $this->handler->del($sessionId);
 
         return empty($result) ? false : true;

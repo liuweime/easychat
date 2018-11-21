@@ -1,19 +1,24 @@
 <?php
+/**
+ * Created by PhpStorm.
+ * User: liuwei
+ * Date: 2018/11/19
+ * Time: 11:26
+ */
+
+use Easychat\Dependencies\Kernel;
 
 /**
- * @param $key
- * @param string $default
- * @return string|array
+ * @param string $name
+ * @return mixed
+ * @throws \Interop\Container\Exception\ContainerException
+ * @throws Exception
  */
-function config($key, $default = '')
+function app(string $name)
 {
-    $config = require ROOT_PATH . '/config/config.php';
-
-    if (false !== strpos($key, '.')) {
-        list($firstKey, $secondKey) = explode($key, '.');
-
-        return empty($config[$firstKey][$secondKey]) ? $default : $config[$firstKey][$secondKey];
+    if (is_null(Kernel::getContainer())) {
+        throw new Exception('not found container');
     }
 
-    return empty($config[$key]) ? $default : $config[$key];
+    return Kernel::getContainer()->get($name);
 }

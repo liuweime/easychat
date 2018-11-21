@@ -12,10 +12,15 @@ class WebSocketServer
 
     private $handle;
 
+    /**
+     * WebSocketServer constructor.
+     * @throws \Exception
+     */
     public function __construct()
     {
         $config = config('socket');
-        $this->socket = new swoole_websocket_server($config['host'], $config['port']);
+
+        $this->socket = new \swoole_websocket_server($config['host'], $config['port']);
         $this->socket->set($config);
 
         $this->handle = CustomRedis::connect();
@@ -30,7 +35,7 @@ class WebSocketServer
         $this->socket->start();
     }
 
-    protected function message(swoole_websocket_server $socket, $frame)
+    protected function message(\swoole_websocket_server $socket, $frame)
     {
         $data = !empty($frame->data) ? json_decode($frame->data, true) : [];
         if (empty($data)) {
