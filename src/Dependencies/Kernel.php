@@ -8,7 +8,8 @@
 
 namespace Easychat\Dependencies;
 
-use CustomRedis\CustomRedis;
+use App\Models\User;
+use Easychat\CustomRedis\CustomRedis;
 use Easychat\Config;
 use Easychat\Validation\DatabasePresenceVerifier;
 use Illuminate\Database\Capsule\Manager;
@@ -17,6 +18,7 @@ use Slim\App;
 use Illuminate\Database\Capsule\Manager as EloquentManager;
 use Overtrue\Validation\Translator;
 use Overtrue\Validation\Factory as ValidatorFactory;
+use Slim\Collection;
 use Slim\Container;
 
 class Kernel
@@ -85,6 +87,7 @@ class Kernel
         $this->loadDependencies();
         $this->loadProvider();
         $this->loadMiddleware();
+
 
         $this->app->run();
     }

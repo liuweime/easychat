@@ -39,23 +39,27 @@ class LoginController extends Controller
      * @param ResponseInterface $response
      * @param array $args
      * @return mixed
+     * @throws \Exception
      */
     public function index(ServerRequestInterface $request, ResponseInterface $response, array $args)
     {
-        $user = $this->userService->login($request);
-        if ($user === false) {
+        $param = $request->getParsedBody();
+
+        try {
+            $user = $this->userService->login($param['name'], $param['password']);
+
+            // 生成token
+            $token = $this->tokenService->create([
+                'uid' => $user['id'],
+                'name' => $user['name']
+            ]);
+        } catch (\Exception $exception) {
             return $this->response($response, [
                 'code' => 1,
                 'data' => [],
-                'message' => '账号或密码不正确'
+                'message' => $exception->getMessage()
             ]);
         }
-
-        // 生成token
-        $token = $this->tokenService->create([
-            'uid' => $user['id'],
-            'name' => $user['name']
-        ]);
 
         return $this->response($response, [
             'code' => 0,

@@ -20,5 +20,8 @@ function app(string $name)
         throw new Exception('not found container');
     }
 
+    if (!Kernel::getContainer()->has($name)) {
+        Kernel::getContainer()[$name] = new $name;
+    }
     return Kernel::getContainer()->get($name);
 }

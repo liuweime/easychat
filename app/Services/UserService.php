@@ -11,9 +11,8 @@ namespace App\Services;
 
 use App\Models\User;
 use constant\JWTConst;
-use CustomRedis\CustomRedis;
-use Illuminate\Database\Capsule\Manager;
-use Psr\Http\Message\ResponseInterface;
+use Easychat\CustomRedis\CustomRedis;
+use mysql_xdevapi\Exception;
 use Psr\Http\Message\ServerRequestInterface;
 
 class UserService extends Service
@@ -27,14 +26,17 @@ class UserService extends Service
     }
 
     /**
-     * @param ServerRequestInterface $request
-     * @return array|bool
+     * @param $name
+     * @param $password
+     * @return array
+     * @throws \Exception
      */
-    public function login(ServerRequestInterface $request)
+    public function login($name, $password) :array
     {
-        $user = $this->user->where('name', $request->getParsedBody()['name'])->first();
-        if (password_verify($request->getParsedBody()['password'], $user->password) === false) {
-            return false;
+        $user = $this->user->where('name', $name)->first();
+        if (!password_verify($password, $user->password)) {
+
+            throw new \Exception('账号或密码不正确');
         }
 
         return $user->toArray();
@@ -45,7 +47,7 @@ class UserService extends Service
         $user = $request->getAttribute('token');
         $now = time();
 
-        app(CustomRedis::class)->hSet(JWTConst::PREFIX.'blacklist', $user->uid, $now);
+        app(CustomRedis::class)->hSet(JWTConst::PREFIX . 'blacklist', $user->uid, $now);
 
         return true;
     }
@@ -57,6 +59,11 @@ class UserService extends Service
     public function register(ServerRequestInterface $request)
     {
         $data = $request->getParsedBody();
+        $user = $this->user->where('name', $data['name'])->first();
+        if (!empty($user)) {
+            return false;
+        }
+
         $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
 
         $this->user->fill($data);
@@ -65,11 +72,8 @@ class UserService extends Service
         return true;
     }
 
-    public function getUserInfo(ServerRequestInterface $request)
+    public function getUserInfo(int $uid)
     {
-        $user = $request->getAttribute('token');
-        $uid = $user->uid;
-
         return $this->user->where('id', $uid)->first();
     }
 

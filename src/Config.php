@@ -7,7 +7,7 @@
  */
 namespace Easychat;
 
-class Config
+class Config implements \ArrayAccess
 {
     private $storage;
 
@@ -21,29 +21,67 @@ class Config
      * @return mixed
      * @throws \Exception
      */
-    public function get($key){
-        $path = $this->getSysConfigPath() . $key . ".php";
-        return $this->load($path);
+    private function load($key)
+    {
+        $path = $this->getSysConfigPath() . $key . '.php';
+
+        if(!file_exists($path)) {
+            throw new \Exception('Can not find the file');
+        }
+
+        $config = include $path;
+        $this->storage[$key] = $config;
     }
 
     /**
-     * @param $path
-     * @return mixed
+     * @param mixed $key
+     * @return array|null
      * @throws \Exception
      */
-    private function load($path)
+    public function offsetGet($key) : ?array
     {
-        $isStorage = isset($this->storage[$path]) ? $this->storage[$path] : null;
-        if($isStorage == null){
-            if(file_exists($path)){
-                $config = include $path;
-                $this->storage[$path] = $config;
-                return $config;
-            }else{
-                throw new \Exception('Can not find the file');
-            }
-        }else{
-            return $this->storage[$path];
+        if (!isset($this->storage[$key])) {
+
+            $this->load($key);
         }
+
+        return isset($this->storage[$key]) ? $this->storage[$key] : null;
+    }
+
+    /**
+     * @param mixed $key
+     * @param mixed $value
+     */
+    public function offsetSet($key, $value)
+    {
+        $this->storage[$key] = $value;
+    }
+
+    /**
+     * @param mixed $key
+     * @return bool
+     * @throws \Exception
+     */
+    public function offsetExists($key)
+    {
+        if (!isset($this->storage[$key])) {
+
+            $this->load($key);
+        }
+
+        return isset($this->storage[$key]);
+    }
+
+    /**
+     * @param mixed $key
+     * @return bool|void
+     */
+    public function offsetUnset($key)
+    {
+        if (isset($this->storage[$key])) {
+            unset($this->storage[$key]);
+        }
+
+        return true;
     }
 }

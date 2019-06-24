@@ -6,7 +6,8 @@
  * Time: 20:48
  */
 
-use Container\Container;
+use Easychat\Config;
+use Easychat\CustomRedis\CustomRedis;
 
 class Server
 {
@@ -16,16 +17,13 @@ class Server
 
     public function __construct()
     {
-        Container::getInstance()->bind('config', 'Config');
-        $config = Container::getInstance()->get('config')->get('socket');
+        $config = app(Config::class)->get('socket');
 
         $this->master = new swoole_websocket_server($config['host'], $config['port']);
         // 进行某些设置
         $this->master->set($config);
 
-        // 运用到缓存
-        Container::getInstance()->bind('storage', 'CustomRedis\CustomRedis');
-        $this->storage = Container::getInstance()->get('storage');
+        $this->storage = app(CustomRedis::class);
     }
 
     public function run()

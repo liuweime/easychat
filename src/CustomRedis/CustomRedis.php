@@ -1,6 +1,6 @@
 <?php
 
-namespace CustomRedis;
+namespace Easychat\CustomRedis;
 
 class CustomRedis
 {
@@ -15,7 +15,7 @@ class CustomRedis
     public function __construct(array $option)
     {
         $this->handle = new \Redis();
-        $this->handle->connect($option['host'], $option['port']);
+        $this->handle->pconnect($option['host'], $option['port']);
     }
 
     public function get($key)

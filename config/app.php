@@ -15,7 +15,7 @@ return [
     'address' => getenv('APP_URL'),
 
     'middleware' => [
-        Easychat\Middleware\AuthenticationMiddleware::class
+        App\Middleware\AuthenticationMiddleware::class,
     ],
 
     'providers' => [

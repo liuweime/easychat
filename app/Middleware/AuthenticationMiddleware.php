@@ -6,28 +6,29 @@
  * Time: 16:02
  */
 
-namespace Easychat\Middleware;
+namespace App\Middleware;
 
 
-use constant\JWTConst;
-use CustomRedis\CustomRedis;
+use App\Services\AuthService;
+use App\Services\TokenService;
 use Firebase\JWT\ExpiredException;
-use Firebase\JWT\JWT;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 class AuthenticationMiddleware
 {
-    protected $alg; //= ["HS256", "HS512", "HS384"];
-
     protected $ignore;
 
     public function __construct(array $ignore = [])
     {
         $this->ignore = $ignore;
-        $this->alg = JWTConst::ALGLIST;
     }
 
+    /**
+     * @param ServerRequestInterface $request
+     * @return mixed
+     * @throws \Exception
+     */
     protected function fetchToken(ServerRequestInterface $request)
     {
         $headers = $request->getHeader('Authorization');
@@ -39,21 +40,31 @@ class AuthenticationMiddleware
         throw new \Exception('Token not found');
     }
 
+    /**
+     * @param ServerRequestInterface $request
+     * @return bool
+     */
     protected function requestIgnore(ServerRequestInterface $request) : bool
     {
         $uri = "/" . $request->getUri()->getPath();
         $uri = preg_replace("#/+#", "/", $uri);
-
         foreach ((array)$this->ignore as $ignore) {
             $ignore = rtrim($ignore, "/");
             if (!!preg_match("@^{$ignore}(/.*)?$@", $uri)) {
-                return false;
+                return true;
             }
         }
 
-        return true;
+        return false;
     }
 
+    /**
+     * @param ServerRequestInterface $request
+     * @param ResponseInterface $response
+     * @param $next
+     * @return mixed
+     * @throws \Interop\Container\Exception\ContainerException
+     */
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response, $next)
     {
         $bool = $this->requestIgnore($request);
@@ -62,24 +73,24 @@ class AuthenticationMiddleware
         }
 
         try {
-            $now = time();
+            // 获取token
             $token = $this->fetchToken($request);
-            JWT::$leeway = JWTConst::FLUSH_TIME;
-            $decode = JWT::decode($token, getenv('JWT_SECRET'), $this->alg);
-            $blacklist = app(CustomRedis::class)->hGet(JWTConst::PREFIX.'blacklist', $decode->uid);
-            if (!is_null($blacklist) && $decode->iat < $blacklist) {
+
+            $user = app(TokenService::class)->decode($token);
+            // 检测是否为合法的token
+            $bool = app(AuthService::class)->isBlackedToken($user);
+            if ($bool) {
 
                 throw new ExpiredException('Expired token 1');
             }
 
-            if ($decode->exp < $now && $decode->exp + JWTConst::FLUSH_TIME >= $now) {
-                // 记录刷新时间
-                app(CustomRedis::class)->hSet(JWTConst::PREFIX . 'blacklist', $decode->uid, $now);
-
-                $decode->iat = $now;
-                $decode->exp = $decode->iat + JWTConst::EXPIRATION_TIME;
+            // 解析用户信息
+            $token = app(AuthService::class)->flush($user);
+            if (!empty($token)) {
+                // 写入
+                $response = $response->withHeader('Authorization', 'Bearer ' . $token);
             }
-            $request = $request->withAttribute('token', $decode);
+            $request = $request->withAttribute('token', $user);
 
         } catch (\Exception $exception) {
             return $response->withStatus(200)

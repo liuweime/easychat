@@ -14,4 +14,6 @@ class Auth
     const LOGIN = 1;
     const REGISTER = 2;
     const RESET = 3;
+
+    const CACHE_AUTH_TOKEN_BLACKLIST = 'auth:blacklist:';
 }

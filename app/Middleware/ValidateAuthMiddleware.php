@@ -5,7 +5,7 @@
  * Date: 2018/11/19
  * Time: 14:06
  */
-namespace Easychat\Middleware;
+namespace App\Middleware;
 
 use constant\Auth;
 use Overtrue\Validation\Factory;
@@ -20,9 +20,9 @@ class ValidateAuthMiddleware
             'password' => 'required',
         ],
         Auth::REGISTER => [
-            'name' => 'required|min:|max:20|unique:User',
+            'name' => 'required|min:|max:20|unique:Users',
             'password' => 'required|min:6',
-            'email' => 'required|email|unique:User'
+            'email' => 'required|email|unique:Users'
         ],
         Auth::RESET => [
             'token' => 'required',

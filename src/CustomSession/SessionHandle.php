@@ -7,8 +7,8 @@
  */
 namespace CustomSession;
 
-use Container\Container;
-use CustomRedis\CustomRedis;
+use Easychat\Config;
+use Easychat\CustomRedis\CustomRedis;
 
 class SessionHandle  implements \SessionHandlerInterface
 {
@@ -19,8 +19,7 @@ class SessionHandle  implements \SessionHandlerInterface
 
     public function __construct()
     {
-        Container::getInstance()->bind('config', 'Config');
-        $option = Container::getInstance()->get('config')->get('session');
+        $option = app(Config::class)->get('session');
         // 检测是否设置了session失效时间
         if (empty($option['max_lifetime'])) {
             $option['max_lifetime'] = ini_get('session.gc_maxlifetime');
@@ -33,12 +32,11 @@ class SessionHandle  implements \SessionHandlerInterface
      * @param string $save_path
      * @param string $session_name
      * @return bool
-     * @throws \Exception
+     * @throws \Interop\Container\Exception\ContainerException
      */
     public function open($save_path, $session_name) : bool
     {
-        Container::getInstance()->bind('CustomRedis\CustomRedis', 'CustomRedis\CustomRedis');
-        $this->handler = Container::getInstance()->get('CustomRedis\CustomRedis');
+        $this->handler = app(CustomRedis::class);
 
         return true;
     }

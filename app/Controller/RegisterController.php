@@ -26,6 +26,11 @@ class RegisterController extends Controller
         $this->tokenService = $tokenService;
     }
 
+    public function test()
+    {
+        return 'hello';
+    }
+
     /**
      * @param ServerRequestInterface $request
      * @param ResponseInterface $response

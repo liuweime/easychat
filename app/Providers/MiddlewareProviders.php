@@ -9,7 +9,8 @@
 namespace App\Providers;
 
 
-use Easychat\Middleware\AuthenticationMiddleware;
+use App\Middleware\AuthenticationMiddleware;
+use App\Middleware\ValidateAuthMiddleware;
 use Pimple\Container;
 use Pimple\ServiceProviderInterface;
 
@@ -23,7 +24,7 @@ class MiddlewareProviders implements ServiceProviderInterface
                 '/v1/login',
                 '/v1/reset_verify',
                 '/v1/reset_password',
-                '/v1/register'
+//                '/v1/register'
             ]);
         };
     }

@@ -10,10 +10,13 @@ namespace App\Services;
 
 
 use constant\JWTConst;
+use Easychat\CustomRedis\CustomRedis;
 use Firebase\JWT\JWT;
 
 class TokenService extends Service
 {
+
+
     /**
      * @param array $userPayload
      * @return array
@@ -44,8 +47,15 @@ class TokenService extends Service
         return JWT::encode($this->buildPayload($payload), getenv("JWT_SECRET"));
     }
 
+    public function update(array $payload)
+    {
+        return JWT::encode($payload, getenv("JWT_SECRET"));
+    }
+
     public function decode(string $token)
     {
         return JWT::decode($token, getenv('JWT_SECRET'), JWTConst::ALGLIST);
     }
+
+
 }
