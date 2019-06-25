@@ -165,10 +165,8 @@ class WebSocketServer
             return false;
         }
 
-        $user = $this->token->decode($token);
-
         // 判断是否是黑名单中
-        $bool = $this->auth->isBlackedToken($user);
+        $bool = $this->auth->isBlackedToken($token);
         if ($bool) {
             $server->push($request->fd, json_encode([
                 'type' =>  Socket::TYPE_NO_LOGIN,
@@ -178,7 +176,7 @@ class WebSocketServer
         }
 
         // 刷新token
-        if ($info = $this->auth->flush($user)) {
+        if ($info = $this->auth->flush($token)) {
             $message['type'] = Socket::TYPE_REFRESH_TOKEN;
             $message['token'] = $info;
 

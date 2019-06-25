@@ -4,11 +4,13 @@
 namespace App\Services;
 
 
+use App\Models\User;
 use constant\Auth;
 use constant\JWTConst;
 use Easychat\CustomRedis\CustomRedis;
 use Firebase\JWT\ExpiredException;
 use Firebase\JWT\JWT;
+use mysql_xdevapi\Exception;
 
 class AuthService extends Service
 {
@@ -16,12 +18,16 @@ class AuthService extends Service
     /** @var CustomRedis  */
     protected $redis;
 
+
+    private $user;
+
     protected $token;
 
-    public function __construct(TokenService $service)
+    public function __construct(TokenService $token, UserService $user)
     {
         $this->redis = app(CustomRedis::class);
-        $this->token = $service;
+        $this->token = $token;
+        $this->user = $user;
     }
 
 
@@ -73,15 +79,31 @@ class AuthService extends Service
         return '';
     }
 
-    public function user(string $token)
+    public function user(string $token) : array
     {
         $user = $this->token->decode($token);
-        $bool = $this->isBlackedToken($user);
-        if ($bool) {
-            throw new ExpiredException('Expired token 1');
+        if ($this->isBlackedToken($user)) {
+            throw new \Exception('token expired');
         }
-        $user = $this->flush($user);
-        $uid = $user['uid'];
 
+        return $user;
+    }
+
+    /**
+     * 用户登录
+     * @param array $data
+     * @return string
+     * @throws \Interop\Container\Exception\ContainerException
+     */
+    public function login($name, $password) : string
+    {
+        $user = app(User::class)->where('name', $name)->first();
+        if (!password_verify($password, $user->password)) {
+
+            throw new \Exception('账号或密码不正确');
+        }
+
+        // 生成token
+        return $this->token->create(['uid' => $user->id, 'name' => $user->name]);
     }
 }
