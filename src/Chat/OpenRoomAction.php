@@ -7,6 +7,7 @@ use App\Services\AuthService;
 use App\Services\TokenService;
 use constant\Chat as ChatConst;
 use constant\Socket;
+use Easychat\Tool\Parse;
 
 
 class OpenRoomAction extends Action
@@ -15,21 +16,23 @@ class OpenRoomAction extends Action
     /**
      * @return bool
      * @throws \Interop\Container\Exception\ContainerException
+     * @throws \ReflectionException
      */
     public function run()
     {
-        $data = json_encode($this->frame->data, true);
-        if (!isset($data['room_id'])) {
+        /** @var Chat $chat */
+        $chat = Parse::convert($this->frame->data, Chat::class);
+        if (empty($chat->getRoomId())) {
             throw new \Exception('未知的房间');
         }
+        $roomId = $chat->getRoomId();
 
         // 获取用户信息
-        $token = $data['token'];
+        $token = $chat->getToken();
         $user = app(AuthService::class)->user($token);
 
-
         // 获取房间信息
-        $room = $this->getRoomInfo($data['room_id']);
+        $room = $this->room->roomInfo($roomId);
         if (empty($room)) {
             $this->server->push($this->frame->fd, json_encode([
                 'type' => Socket::TYPE_NO_ROOM,
@@ -39,7 +42,7 @@ class OpenRoomAction extends Action
         }
 
         // 查询是否在房间中
-        $bool = $this->isRoomUser($room['id'], $user['uid']);
+        $bool = $this->room->isRoomUser($room['id'], $user['uid']);
         if (!$bool) {
             // 不在房间中
             $this->server->push($this->frame->fd, json_encode([
@@ -73,36 +76,4 @@ class OpenRoomAction extends Action
         return $this->storge->sEmebers(ChatConst::CACHE_ROOM_FD . $roomId);
     }
 
-    /**
-     * 是否是本房间用户
-     * @param int $roomId
-     * @param int $uid
-     * @return bool
-     */
-    private function isRoomUser(int $roomId, int $uid) : bool
-    {
-        $res = $this->storge->hExists(ChatConst::CACHE_ROOM_USERS . $roomId, $uid);
-
-        return (bool)$res;
-    }
-
-    /**
-     * @param int $roomId
-     * @return mixed
-     */
-    private function getRoomInfo(int $roomId)
-    {
-        // 首先从缓存中获取
-        $res = $this->storge->get(ChatConst::CACHE_ROOM_INFO . $roomId);
-        if (empty($res)) {
-            // 从数据库中获取
-            $roomModel = new ChatRoom();
-            $roomInfo = $roomModel->where('id', $roomId)->first()->toArray();
-            $this->storge->set(ChatConst::CACHE_ROOM_INFO . $roomId, serialize($roomInfo), ChatConst::ROOM_CACHE_TIMEOUT);
-        } else {
-            $roomInfo = unserialize($res);
-        }
-
-        return $roomInfo;
-    }
 }

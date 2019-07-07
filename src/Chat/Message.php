@@ -41,9 +41,10 @@ class Message
             case Socket::TYPE_CHANGE_ROOM:
                 break;
             case Socket::TYPE_JOIN_ROOM:
+
                 break;
             case Socket::TYPE_OPEN_ROOM:
-
+                $action = new OpenRoomAction($this->server, $this->frame);
                 break;
             default:
                 $action = new NoAction($this->server, $this->frame);

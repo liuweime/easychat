@@ -79,6 +79,13 @@ class AuthService extends Service
         return '';
     }
 
+    /**
+     * 获取token用户信息
+     *
+     * @param string $token
+     * @return array
+     * @throws \Exception
+     */
     public function user(string $token) : array
     {
         $user = $this->token->decode($token);

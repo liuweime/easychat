@@ -19,4 +19,5 @@ class Socket
     const TYPE_NO_ACTION = 'NoAction';
     const TYPE_NO_ROOM = 'WrongRoom';
     const TYPE_ILLEGAL_OPEN = 'IllegalOpenRoom';
+    const TYPE_JOINED = 'JoinedRoom';
 }
