@@ -26,4 +26,18 @@ class User extends Model
     {
         return $this->belongsToMany(ChatRoom::class, 'user_with_chat_rooms', 'uid', 'room_id');
     }
+
+    public function scopeUserFilter($query, array $filter)
+    {
+        $where = [];
+        foreach ($filter as $k => $item) {
+            if ($k === 'password') {
+                $where[] = ['password', '=', password_hash($item, PASSWORD_DEFAULT)];
+            } else {
+                $where[] = [$k, '=', $item];
+            }
+        }
+
+        return $query->where($where);
+    }
 }

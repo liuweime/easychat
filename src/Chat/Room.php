@@ -62,7 +62,7 @@ class Room
 
     public function joinRoom(int $roomId, int $uid) : bool
     {
-        $roomInfo = $this->roomInfo(($roomId));
+        $roomInfo = $this->roomInfo($roomId);
         if (empty($roomInfo)) {
             throw new \Exception('room not found');
         }

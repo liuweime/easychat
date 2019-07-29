@@ -4,7 +4,7 @@
 namespace Easychat\Chat;
 
 
-class Chat
+abstract class Chat
 {
     /** @var string 动作 */
     private $type;
